@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -45,7 +46,7 @@ int main() {
   // domain: AF_INET=IPv4、type: SOCK_STREAM=TCP、protocol: 0=自動選択
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd == -1) {
-    printf("Failed to create a socket\n");
+    printf("Failed to create a socket. errno=%d\n", errno);
     return 1;
   }
   printf("Created a socket\n");
@@ -58,14 +59,14 @@ int main() {
       .sin_zero = {0},
   };
   if (bind(socket_fd, (struct sockaddr *)&server_addr, sizeof(server_addr))) {
-    printf("Failed to bind an address to a socket\n");
+    printf("Failed to bind an address to a socket. errno=%d\n", errno);
     return 1;
   }
   printf("Bound an address to a socket\n");
 
   // リッスン
   if (listen(socket_fd, SOMAXCONN)) {
-    printf("Failed to listen\n");
+    printf("Failed to listen. errno=%d\n", errno);
     return 1;
   }
   printf("Started to listend\n");
@@ -75,14 +76,14 @@ int main() {
     if (pthread_create(
             &connection_threads[i], NULL, ConnectionThread, &socket_fd
         )) {
-      printf("Failed to create a thread\n");
+      printf("Failed to create a thread. errno=%d\n", errno);
       return 1;
     }
   }
 
   for (int i = 0; i < SOMAXCONN; i++) {
     if (pthread_join(connection_threads[i], NULL)) {
-      printf("Failed to join a thread\n");
+      printf("Failed to join a thread. errno=%d\n", errno);
       return 1;
     }
   }
